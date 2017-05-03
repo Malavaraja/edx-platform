@@ -561,7 +561,8 @@ def certificate_info_for_user(user, course_id, grade, user_is_whitelisted=None):
 
     certificate_is_delivered = 'N'
     certificate_type = 'N/A'
-    eligible_for_certificate = 'Y' if (user_is_whitelisted or grade is not None) and user.profile.allow_certificate \
+    # grade may be empty string or None
+    eligible_for_certificate = 'Y' if (user_is_whitelisted or grade) and user.profile.allow_certificate \
         else 'N'
 
     certificate_status = certificate_status_for_student(user, course_id)
