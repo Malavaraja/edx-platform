@@ -1278,3 +1278,7 @@ ENTERPRISE_API_CACHE_TIMEOUT = 3600  # Value is in seconds
 ############## Settings for the Discovery App ######################
 
 COURSE_CATALOG_API_URL = None
+
+###################### VIDEO IMAGE STORAGE ######################
+
+VIDEO_IMAGE_DEFAULT_FILENAME = 'default_video_image.png'

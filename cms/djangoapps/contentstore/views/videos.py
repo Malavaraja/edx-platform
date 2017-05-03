@@ -11,6 +11,7 @@ from uuid import uuid4
 
 from django.conf import settings
 from django.contrib.auth.decorators import login_required
+from django.contrib.staticfiles.storage import staticfiles_storage
 from django.http import HttpResponse, HttpResponseNotFound
 from django.utils.translation import ugettext as _, ugettext_noop
 from django.views.decorators.http import require_GET, require_POST, require_http_methods
@@ -320,14 +321,23 @@ def _get_videos(course):
     return videos
 
 
+def _get_default_video_image_url():
+    """
+    Returns default video image url
+    """
+    return staticfiles_storage.url(settings.VIDEO_IMAGE_DEFAULT_FILENAME)
+
+
 def _get_index_videos(course):
     """
     Returns the information about each video upload required for the video list
     """
+    default_video_image_url = _get_default_video_image_url()
+
     return list(
         {
-            attr: video[attr]
-            for attr in ["edx_video_id", "client_video_id", "created", "duration", "status", "course_video_image_url"]
+            attr: default_video_image_url if attr == 'course_video_image_url' and video[attr] is None else video[attr]
+            for attr in ['edx_video_id', 'client_video_id', 'created', 'duration', 'status', 'course_video_image_url']
         }
         for video in _get_videos(course)
     )
@@ -361,7 +371,8 @@ def videos_index_json(course):
             "client_video_id": "video.mp4",
             "created": "1970-01-01T00:00:00Z",
             "duration": 42.5,
-            "status": "upload"
+            "status": "upload",
+            "course_video_image_url": "https://video/images/1234.jpg"
         }]
     }
     """

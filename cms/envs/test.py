@@ -343,3 +343,4 @@ VIDEO_IMAGE_SETTINGS = dict(
     ),
     DIRECTORY_PREFIX='videoimage/',
 )
+VIDEO_IMAGE_DEFAULT_FILENAME = 'default_video_image.png'

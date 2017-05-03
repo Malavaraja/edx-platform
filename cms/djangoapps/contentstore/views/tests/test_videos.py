@@ -18,7 +18,12 @@ from mock import Mock, patch
 from edxval.api import create_profile, create_video, get_video_info, get_course_video_image_url
 
 from contentstore.models import VideoUploadConfig
-from contentstore.views.videos import KEY_EXPIRATION_IN_SECONDS, StatusDisplayStrings, convert_video_status
+from contentstore.views.videos import (
+    KEY_EXPIRATION_IN_SECONDS,
+    StatusDisplayStrings,
+    convert_video_status,
+    _get_default_video_image_url
+)
 from contentstore.tests.utils import CourseTestCase
 from contentstore.utils import reverse_course_url
 from xmodule.modulestore.tests.factories import CourseFactory
@@ -526,6 +531,8 @@ class VideosHandlerTestCase(VideoUploadTestMixin, CourseTestCase):
         self.assert_video_status(url, edx_video_id, 'Failed')
 
 
+@patch.dict("django.conf.settings.FEATURES", {"ENABLE_VIDEO_UPLOAD_PIPELINE": True})
+@override_settings(VIDEO_UPLOAD_PIPELINE={"BUCKET": "test_bucket", "ROOT_PATH": "test_root"})
 class VideoImageTestCase(VideoUploadTestBase, CourseTestCase):
     """
     Tests for video image.
@@ -578,6 +585,28 @@ class VideoImageTestCase(VideoUploadTestBase, CourseTestCase):
         self.assertEqual(response.status_code, 400)
         response = json.loads(response.content)
         self.assertEqual(response['error'], 'No file provided for video image')
+
+    def test_default_video_image(self):
+        """
+        Test default video image.
+        """
+        edx_video_id = 'test1'
+        default_video_image_url = _get_default_video_image_url()
+        get_videos_url = reverse_course_url('videos_handler', self.course.id)
+        video_image_upload_url = self.get_url_for_course_key(self.course.id, {'edx_video_id': edx_video_id})
+        with make_image_file() as image_file:
+            self.client.post(video_image_upload_url, {'file': image_file}, format='multipart')
+
+        val_image_url = get_course_video_image_url(course_id=self.course.id, edx_video_id=edx_video_id)
+
+        response = self.client.get_json(get_videos_url)
+        self.assertEqual(response.status_code, 200)
+        response_videos = json.loads(response.content)["videos"]
+        for response_video in response_videos:
+            if response_video['edx_video_id'] == edx_video_id:
+                self.assertEqual(response_video['course_video_image_url'], val_image_url)
+            else:
+                self.assertEqual(response_video['course_video_image_url'], default_video_image_url)
 
 
 @patch.dict("django.conf.settings.FEATURES", {"ENABLE_VIDEO_UPLOAD_PIPELINE": True})
