@@ -334,3 +334,12 @@ FEATURES['CUSTOM_COURSES_EDX'] = True
 
 # API access management -- needed for simple-history to run.
 INSTALLED_APPS += ('openedx.core.djangoapps.api_admin',)
+
+########################## VIDEO IMAGE STORAGE ############################
+VIDEO_IMAGE_SETTINGS = dict(
+    STORAGE_KWARGS=dict(
+        location=MEDIA_ROOT,
+        base_url=MEDIA_URL,
+    ),
+    DIRECTORY_PREFIX='videoimage/',
+)
